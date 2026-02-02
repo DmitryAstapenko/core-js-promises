@@ -110,8 +110,24 @@ function getFirstPromiseResult(promises) {
  * [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)] => Promise fulfilled with [1, 2, 3]
  * [Promise.resolve(1), Promise.reject(2), Promise.resolve(3)] => Promise rejected with 2
  */
-function getAllOrNothing(/* promises */) {
-  throw new Error('Not implemented');
+function getAllOrNothing(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let resolvedCount = 0;
+
+    promises.forEach((promise) => {
+      promise
+        .then((value) => {
+          results.push(value);
+          resolvedCount += 1;
+
+          if (resolvedCount === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch(reject);
+    });
+  });
 }
 
 /**
@@ -126,8 +142,28 @@ function getAllOrNothing(/* promises */) {
  * [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)] => Promise fulfilled with [1, 2, 3]
  * [Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]  => Promise fulfilled with [1, null, 3]
  */
-function getAllResult(/* promises */) {
-  throw new Error('Not implemented');
+function getAllResult(promises) {
+  return new Promise((resolve) => {
+    const results = [];
+    let completed = 0;
+
+    promises.forEach((promise, index) => {
+      promise
+        .then((value) => {
+          results[index] = value;
+        })
+        .catch(() => {
+          results[index] = null;
+        })
+        .finally(() => {
+          completed += 1;
+
+          if (completed === promises.length) {
+            resolve(results);
+          }
+        });
+    });
+  });
 }
 
 /**
@@ -148,8 +184,18 @@ function getAllResult(/* promises */) {
  * [promise1, promise4, promise3] => Promise.resolved('104030')
  * [promise1, promise4, promise3, promise2] => Promise.resolved('10403020')
  */
-function queuePromises(/* promises */) {
-  throw new Error('Not implemented');
+function queuePromises(promises) {
+  let result = '';
+
+  return promises
+    .reduce((chain, promise) => {
+      return chain.then(() =>
+        promise.then((value) => {
+          result += String(value);
+        })
+      );
+    }, Promise.resolve())
+    .then(() => result);
 }
 
 module.exports = {
